@@ -44,6 +44,17 @@ class Structurer
     }
 
     /**
+     * 
+     * @return self::q Статический экронирующий метод
+     */
+    public function __call($name, $arguments)
+    {
+        if ($name == 'q') {
+            return self::q($arguments[0]);
+        }
+    }
+
+    /**
      * Получение, проверка и создание пути
      * @param string $path Внутренний путь к дирректории сохранения логов.
      * В качестве разделителя директорий используется - "/".
@@ -71,7 +82,7 @@ class Structurer
         // Создание структуры директорий
         if (!file_exists($this->core . '/' . $path)) {
             $structure = explode('/', $path);
-            $path = '';
+            $path      = '';
             foreach ($structure as $folder) {
                 $folder = Dencoder::name(date($folder));
                 if (empty($folder) or $folder == '..' or $folder == '.') {
@@ -112,11 +123,12 @@ class Structurer
      * @param string $string Строка
      * @return string Строка, где каждая буква экранирована
      */
-    public function q($string)
+    public static function q($string)
     {
         if (!is_string($string)) {
             throw new Exception(Dencoder::utf8('Параметр "$string" должен быть строкой.'));
         }
         return Dencoder::quote($string);
     }
+
 }
