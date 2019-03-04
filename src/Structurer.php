@@ -14,12 +14,12 @@ class Structurer
     /**
      * @var string Абсолютный путь к корню приложения
      */
-    private $core;
+    private $core = '';
 
     /**
      * @var string Имя последнего файла с которым велась работа
      */
-    private $file;
+    private $file = '';
 
     /**
      * @var array Шаблон-обертка для символов, которые необходимо прогнать
@@ -40,14 +40,14 @@ class Structurer
     {
         $this->core = realpath($core);
 
-        unset($core);
-
         if (!$this->core or !is_dir($this->core)) {
             throw new Exception("Некорректный адрес приложения: {$this->core}");
         }
 
         $this->core = Pather::upath($this->core);
         $this->core = Pather::rstrim($this->core);
+
+        unset($core);
     }
 
     /**
@@ -56,10 +56,12 @@ class Structurer
      * @param string $name Имя для папки
      * @param int $mode (optional) Права доступа (в восьмеричной системе
      * счисления)
-     * @return self Новый объект с новым корневым путем
+     * @return self Новый объект, с новым корневым путем
      */
     public function folder(string $name, int $mode = 0777): self
     {
+        $path = '';
+
         $name = Pather::name($name);
         $path = "{$this->core}/$name";
         $make = self::make($path, '', $mode);
@@ -70,12 +72,14 @@ class Structurer
     }
 
     /**
-     * Подняться на директорией выше. Не сработает в корне
+     * Подняться директорией выше. Не сработает в корне
      * 
      * @return self Новый объект, с новым корневым путем
      */
     public function back(): self
     {
+        $path = '';
+
         $path = preg_replace('/\/[^\/]+$/ui', '', $this->core);
 
         return new self($path);
@@ -91,6 +95,8 @@ class Structurer
      */
     public function file(string $name, int $mode = 0777): self
     {
+        $path = '';
+
         $name       = Pather::name($name);
         $path       = self::make($this->core, $name, $mode);
         $this->file = preg_replace('/.*\//ui', '', $path);
@@ -103,13 +109,15 @@ class Structurer
     /**
      * Записать текст в файл на котором установлен курсор
      * 
-     * @param string $text Текст, который необходимо записать
+     * @param string $content Текст, который необходимо записать
      * @param bool $append (optional) true - дописать в файл
      * @return self Текущий объект
      * @throws Exception
      */
-    public function content(string $text, bool $append = false): self
+    public function content(string $content, bool $append = false): self
     {
+        $path = '';
+
         if (!$this->file) {
             throw new Exception(
                 "Отсутствует файл для записи. Директория: {$this->core}"
@@ -122,11 +130,11 @@ class Structurer
 
         $path = "{$this->core}/{$this->file}";
 
-        if (file_put_contents($path, $text, $append) === false) {
+        if (file_put_contents($path, $content, $append) === false) {
             throw new Exception("Не удалось записать в файл: $path");
         }
 
-        unset($text, $append, $path);
+        unset($content, $append, $path);
 
         return $this;
     }
@@ -149,6 +157,8 @@ class Structurer
      */
     public function mode(array $params, bool $folder = false): self
     {
+        $path = '';
+
         $path = $this->core;
 
         if ($this->file and !$folder) {
@@ -173,6 +183,8 @@ class Structurer
             }
         }
 
+        unset($params, $folder, $path);
+
         return $this;
     }
 
@@ -185,13 +197,17 @@ class Structurer
      */
     public function path(bool $file = false): string
     {
+        $path = '';
+
         if ($file and $this->file) {
-            unset($file);
-            return "{$this->core}/{$this->file}";
+            $path = "{$this->core}/{$this->file}";
         } else {
-            unset($file);
-            return $this->core;
+            $path = $this->core;
         }
+
+        unset($file);
+
+        return $path;
     }
 
     /**
@@ -202,6 +218,8 @@ class Structurer
     public function ls(): array
     {
         $content = [];
+        $scan    = [];
+
         $scan = scandir($this->core);
 
         while (($i = array_search('.', $scan)) !== false) {
@@ -239,15 +257,18 @@ class Structurer
      * @param string $file (optional) Имя для файла
      * @param int $mode (optional) Права доступа (в восьмеричной системе
      * счисления)
-     * @return string Абсолютный путь к финальной папке/файлу
+     * @return string Абсолютный и развернутый путь к финальной папке/файлу
      * @throws Exception
      */
     public static function make(
         string $path,
         string $file = '',
-        int $mode = 0777
+        int    $mode = 0777
     ): string
     {
+        $pattern = '';
+        $npath   = '';
+
         $pattern = '/'
             . preg_quote(self::$template['before'])
             . '(.*)'
@@ -284,9 +305,44 @@ class Structurer
             }
         }
 
-        unset($path, $file, $pattern);
+        unset($path, $file, $mode, $pattern);
 
         return $npath;
+    }
+
+    /**
+     * Создание структуры директорий и файла с контентом
+     * 
+     * @param string $path Абсолютный путь, который необходимо реализовать
+     * @param string $content (optional) Текст, который необходимо записать
+     * @param bool $append (optional) true - дописать в файл
+     * @param int $mode (optional) Права доступа (в восьмеричной системе
+     * счисления)
+     * @return string Абсолютный и развернутый путь к файлу
+     */
+    public static function cmake(
+        string $path,
+        string $content = '',
+        bool   $append  = false,
+        int    $mode    = 0777
+    ): string
+    {
+        $file  = '';
+        $quote = '';
+
+        $path  = Pather::rstrim($path);
+        $file  = basename($path);
+        $quote = preg_quote($file);
+        $path  = preg_replace("/$quote$/ui", '', $path);
+
+        self::make($path, $file, $mode);
+
+        $path = (new self($path))->file($file)->content($content, $append)
+            ->path(true);
+
+        unset($content, $append, $mode, $file, $quote);
+
+        return $path;
     }
 
     /**
@@ -297,11 +353,13 @@ class Structurer
      */
     private static function _dateCB(array $match): string
     {
+        $string = '';
+
         $string = $match[0];
         $string = str_replace(
             [
                 self::$template['before'],
-                self::$template['after']
+                self::$template['after'],
             ],
             '',
             $string
