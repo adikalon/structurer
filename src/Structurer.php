@@ -321,10 +321,10 @@ class Structurer
      * @return string Абсолютный и развернутый путь к файлу
      */
     public static function cmake(
-        string $path,
-        string $content = '',
-        bool   $append  = false,
-        int    $mode    = 0777
+        string  $path,
+        ?string $content = null,
+        bool    $append  = false,
+        int     $mode    = 0777
     ): string
     {
         $file  = '';
@@ -337,8 +337,13 @@ class Structurer
 
         self::make($path, $file, $mode);
 
-        $path = (new self($path))->file($file)->content($content, $append)
-            ->path(true);
+        $path = (new self($path))->file($file);
+
+        if (is_string($content)) {
+            $path = $path->content($content, $append);
+        }
+
+        $path = $path->path(true);
 
         unset($content, $append, $mode, $file, $quote);
 

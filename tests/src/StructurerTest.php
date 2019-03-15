@@ -183,5 +183,9 @@ class StructurersTest extends TestCase
         Structurer::cmake("{$this->root}/file.txt", 'qwerty');
 
         $this->assertStringEqualsFile("{$this->root}/file.txt", 'qwerty');
+
+        Structurer::cmake("{$this->root}/file.txt");
+
+        $this->assertStringEqualsFile("{$this->root}/file.txt", 'qwerty');
     }
 }
