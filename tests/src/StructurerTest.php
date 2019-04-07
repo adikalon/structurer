@@ -4,6 +4,7 @@ namespace Test\Hellpers;
 
 use PHPUnit\Framework\TestCase;
 use Hellpers\Structurer;
+use DateTime;
 
 class StructurersTest extends TestCase
 {
@@ -140,7 +141,7 @@ class StructurersTest extends TestCase
 
     public function testD()
     {
-        $year = date('Y');
+        $year = (new DateTime())->format('Y');
 
         $this->assertFileNotExists("{$this->root}/$year");
         $this->structurer->folder(Structurer::d('Y'))->path();

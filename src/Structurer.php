@@ -3,6 +3,7 @@
 namespace Hellpers;
 
 use Exception;
+use DateTime;
 
 /**
  * Работа с файловой системой
@@ -23,7 +24,7 @@ class Structurer
 
     /**
      * @var array Шаблон-обертка для символов, которые необходимо прогнать
-     * через date() 
+     * через DateTime::format()
      */
     private static $template = [
         'before' => '::d->(::',
@@ -240,7 +241,7 @@ class Structurer
     }
 
     /**
-     * Создать шаблон для преобразования функцией date()
+     * Создать шаблон для преобразования методом DateTime::format()
      * 
      * @param string $string Строка содержащая спецсиволы
      * @return string Строка обернутая шаблоном для декодирования
@@ -369,7 +370,7 @@ class Structurer
             '',
             $string
         );
-        $string = date($string);
+        $string = (new DateTime())->format($string);
 
         unset($match);
 
