@@ -1,4 +1,4 @@
-# Dencoder
+# Structurer
 **hellpers/structurer** - Работа с файловой системой.
 
 ## Установка:
